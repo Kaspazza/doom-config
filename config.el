@@ -39,6 +39,10 @@
 (setq display-line-numbers-type t)
 ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
 
+;; Debugging eca
+(after! eca
+  (setq eca-extra-args '("--verbose" "--log-level" "debug")))
+
 ;; (require 'doom-themes)
 ;; (require 'treemacs)
 ;; (require 'all-the-icons)
@@ -59,13 +63,22 @@
 
 ;;Format after save
 (defun zprint ()
+  (interactive)
   (when (or (eq major-mode 'clojure-mode)
             (eq major-mode 'clojurec-mode)
             (eq major-mode 'clojurescript-mode))
     (shell-command-to-string (format "zprint -w %s" buffer-file-name))
     (revert-buffer :ignore-auto :noconfirm)))
 
-(add-hook 'after-save-hook #'zprint)
+;; After save changes
+;; (add-hook 'after-save-hook #'zprint)
+;; Remove the hook
+(remove-hook 'after-save-hook #'zprint)
+
+
+;;Debugging
+;; (setq debug-on-error t)
+;; (setq cider-ns-refresh-show-log-buffer t)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -112,38 +125,59 @@
          (emacs-lisp-mode . paredit-mode)))
 
 
-(use-package! lsp-grammarly
-  :ensure t
-  :hook (text-mode . (lambda ()
-                       (require 'lsp-grammarly)
-                       (lsp))))
+;;DO NOT USE IT!!! It will have a conflict with marksmode and crash on .md files
+;; (use-package! lsp-grammarly
+;;   :ensure t
+;;   :hook (text-mode . (lambda ()
+;;                        (require 'lsp-grammarly)
+;;                        (lsp))))
 
-(setq cider-comment-prefix nil)
+
+
+(use-package! cider
+  :ensure t
+  :init
+  (setq cider-known-endpoints '(("platform-repl-back" "0.0.0.0" "39399")
+                                ("platform-repl-front" "0.0.0.0" "8234"))))
+
+(setq cider-comment-prefix "#_")
+(setq cider-comment-continued-prefix "")
 (setq diff-refine t)
 
 (load! "+bindings")
-(load! "+hephaistox")
 
 (after! hl-todo
   (setq hl-todo-keyword-faces
-        `(("HOLD"   . "#d0bf8f")
-          ("TODO"   . "#cc9393")
-          ("NEXT"   . "#dca3a3")
-          ("THEM"   . "#dc8cc3")
-          ("PROG"   . "#7cb8bb")
-          ("OKAY"   . "#7cb8bb")
-          ("DONT"   . "#5f7f5f")
-          ("FAIL"   . "#8c5353")
-          ("DONE"   . "#afd8af")
-          ("NOTE"   . "#d0bf8f")
-          ("NOTES"  . "#d0bf8f")
-          ("MAYBE"  . "#d0bf8f")
-          ("KLUDGE" . "#d0bf8f")
-          ("HACK"   . "#d0bf8f")
-          ("TEMP"   . "#d0bf8f")
-          ("FIXME"  . "#cc9393")
-          ("XXXX*"  . "#cc9393"))))
+        `(("HOLD"     . "#d0bf8f")
+          ("TODO"     . "#cc9393")
+          ("CANCELED" . "#0a0808")
+          ("NEXT"     . "#dca3a3")
+          ("DONE"     . "#afd8af")
+          ("DONT"     . "#5f7f5f")
+          ("FAIL"     . "#8c5353")
+          ("NOTE"     . "#d0bf8f")
+          ("NOTES"    . "#d0bf8f")
+          ("MAYBE"    . "#d0bf8f")
+          ("HACK"     . "#d0bf8f")
+          ("TEMP"     . "#d0bf8f")
+          ("FIXME"    . "#cc9393")
+          ("XXXX*"    . "#cc9393"))))
 
 ;; Emacs starting full-screen
 (setq! initial-frame-alist
        '((fullscreen . maximized)))
+
+;; Embark export to writable buffer feature (e.g. go to function references,it will show buffer with all occurences and embark by default don't have an option to make it writable with wgrep (C-c C-e)).
+;; (setf (alist-get 'consult-location embark-exporters-alist)
+;;       #'embark-consult-export-location-grep)
+
+(setq native-comp-deferred-compilation-deny-list '("markdown-toc"))
+
+;;Alien should be default no idea why it was not
+(setq projectile-indexing-method 'alien)
+
+;;Tailwindcss autocompletion
+(use-package! lsp-tailwindcss :after lsp-mode)
+
+;;
+;;

@@ -1,16 +1,60 @@
 ;;; ~/.doom.d/+bindings.el -*- lexical-binding: t; -*-
+;; s- is command
+;; M- is option
+;; C- is control
+;; C-M is control + option
+
 
 (define-key evil-normal-state-map (kbd "<tab>") 'evil-jump-item)
 (define-key evil-motion-state-map (kbd "] e") #'flycheck-next-error)
 (define-key evil-motion-state-map (kbd "[ e") #'flycheck-previous-error)
 
-;;evil-multiedit feature - to be learned
+;; evil multiedit (multi cursor)
 (map! :nvi "s-r" #'evil-multiedit-match-all
       :nvi "s-d" #'evil-multiedit-match-and-next
       :nvi "s-D" #'evil-multiedit-match-and-prev
       :nvi "s-n" #'evil-multiedit-next
       :nvi "s-p" #'evil-multiedit-prev
-      :nvi "s-m" #'evil-multiedit-toggle-or-restrict-region)
+      :nvi "s-m" #'evil-multiedit-toggle-or-restrict-region
+      )
+
+(map! :nv "M-RET" #'cider-eval-last-sexp
+      :nv "s-RET" #'cider-load-buffer
+      :nv "s-<return>" #'cider-load-buffer
+      :nv "M-p" #'cider-pprint-eval-last-sexp
+      :nv "M-P" #'cider-pprint-eval-last-sexp-to-comment)
+
+(map!
+ :nvi "s-<up>" #'sp-raise-sexp
+ :nvi "<end>" #'sp-forward-symbol   ;; fn + ->
+ :nvi "<home>" #'sp-backward-symbol ;; fn + <-)
+ )
+
+;; removing stuff
+(map!
+ :nvi "s-k" #'sp-kill-sexp
+ :nvi "s-w" #'sp-kill-word
+ :nvi "s-l" #'paredit-kill)
+
+;; Switch buffers with SPC + arrow
+;; :n is required for evil mode to overrite its key. Something to do with evil state being higher priority
+(map! :n  "SPC <up>" #'evil-window-up)
+(map! :n  "SPC <down>" #'evil-window-down)
+(map! :n  "SPC <right>" #'evil-window-right)
+(map! :n  "SPC <left>" #'evil-window-left)
+
+(defun my/cider-connect-platform-repl ()
+  (interactive)
+  (cider-connect-clj '(:host "0.0.0.0" :port "39399")))
+
+(defun my/cider-connect-cljs-platform-repl ()
+  (interactive)
+  (let ((cider-shadow-default-options ":app"))
+    (cider-connect-cljs '(:host "0.0.0.0" :port "8234" :cljs-repl-type shadow))))
+
+(after! cider
+  (map! :n "SPC m l" #'my/cider-connect-platform-repl)
+  (map! :n "SPC m f" #'my/cider-connect-cljs-platform-repl))
 
 ;; paredit barf/slurp - to be learned
 (after! paredit
@@ -104,10 +148,3 @@
 
 (when '(help-at-pt-timer-delay 0.1))
 '(help-at-pt-display-when-idle '(lsp-ui-doc-show))
-
-;; Switch buffers with SPC + arrow
-;; :n is required for evil mode to overrite its key. Something to do with evil state being higher priority
-(map! :n  "SPC <up>" #'evil-window-up)
-(map! :n  "SPC <down>" #'evil-window-down)
-(map! :n  "SPC <right>" #'evil-window-right)
-(map! :n  "SPC <left>" #'evil-window-left)
